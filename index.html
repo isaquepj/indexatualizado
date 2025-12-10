@@ -1,33 +1,3 @@
-<!--
-//====================================================================\\
-||                                                                   ||
-||   CARDÁPIO SHEETS - V4.0.6  - 28/09/2025 - 22h00                 ||
-||                                                                   ||
-||    Desenvolvido com ❤️ por Dante Testa                            ||
-||    www.dantetesta.com.br | WhatsApp: (19) 99802-9156              ||
-||                                                                   ||
-||    [!] AVISO IMPORTANTE                                           ||
-||    Este código é propriedade intelectual de Dante Testa.          ||
-||    Não utilize de forma pirata. Valorize o trabalho do            ||
-||    desenvolvedor adquirindo uma licença legítima.                 ||
-||                                                                   ||
-||    [$] APOIE O DESENVOLVEDOR                                      ||
-||    Ao comprar o original você apoia um profissional que           ||
-||    também tem família e luta todo dia para pagar as contas.       ||
-||    Não pegue atalhos - um dia a vida manda a conta das            ||
-||    pequenas coisas erradas que fazemos.                           ||
-||                                                                   ||
-||    [$] Se este script te ajudou a ficar rico e quiser me          ||
-||    enviar um presente financeiro: PIX dante.testa@gmail.com       ||
-||                                                                   ||
-||    [*] SUPORTE TÉCNICO [não gratuito]                             ||
-||    Disponível via WhatsApp. Entre em contato para consultar       ||
-||    valores e planos de suporte personalizados.                    ||
-||                                                                   ||
-||    "Código é poesia. Respeite o poeta."                           ||
-||                                                                   ||
-\\====================================================================//
--->
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -40,8 +10,11 @@
     
 
 <!--   INSIRA ABAIXO AS TAGS DE SEO -->
-<title>Cardápio Sheets</title>
-
+<meta property="og:title" content="Modelo de Cardapio Digital SM">
+<meta property="og:image" content="https://i.postimg.cc/TYmKyX6s/Sistema-Cardapio-Digital.png">
+<meta property="og:description" content="Nós vamos te ajudar a sair do vechame!">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://modelo.meu-cardapio.digital">
 
 <!--   INSIRA ACIMA AS TAGS DE SEO -->
 
@@ -7440,7 +7413,51 @@
                 errorLog('Erro ao atualizar orderData:', e);
             }
         }
+        // Atualizar dados do pedido a partir do formulário
+function updateOrderDataFromForm() {
+    try {
+        const customerName = document.getElementById('customer-name')?.value || '';
+        const whatsapp = document.getElementById('customer-whatsapp')?.value || '';
+        const paymentMethod = document.getElementById('payment-method')?.value || '';
+        const changeAmount = document.getElementById('change-amount')?.value || '';
+        const notes = document.getElementById('order-notes')?.value || '';
+        const deliveryType = document.querySelector('input[name="delivery-type"]:checked')?.value || '';
         
+        orderData.customerName = customerName;
+        orderData.whatsapp = whatsapp;
+        orderData.paymentMethod = paymentMethod;
+        orderData.changeAmount = changeAmount;
+        orderData.notes = notes;
+        orderData.deliveryType = deliveryType;
+    } catch (e) {
+        errorLog('Erro ao atualizar orderData:', e);
+    }
+}
+// ===== ENVIAR PEDIDO PARA A PLANILHA (WEB APP) =====
+const PEDIDOS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx5nFXE-eKmqVmJMyoWV7eZ662SxQ3MXBQ9K-DYp4Iu53plvQgzXbPnmJqNyhlVkN_c0Q/exec';
+
+async function sendOrderToSheet(orderData) {
+    try {
+        const payload = {
+            cliente: orderData.customerName || '',
+            whatsapp: orderData.whatsapp || '',
+            itens: orderData.itemsText || '',
+            total: orderData.total || 0,
+            forma_pagamento: orderData.paymentMethod || '',
+            tipo_pedido: orderData.orderType || ''
+        };
+
+        await fetch(PEDIDOS_WEBAPP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+    } catch (e) {
+        console.error('Erro ao enviar pedido para planilha:', e);
+    }
+}
+
         // Configura atalhos de teclado
         function setupKeyboardShortcuts() {
             debugLog('🎹 Configurando atalhos de teclado...');
@@ -9631,7 +9648,41 @@
                 showFieldError('customer-name', customerName ? 'Nome deve ter pelo menos 2 caracteres' : 'Nome completo é obrigatório');
                 hasErrors = true;
             }
-            
+                // Montar dados para registro na planilha
+    const orderDataForSheet = {
+        customerName: orderData.customerName,
+        whatsapp: orderData.whatsapp,
+        itemsText: generateOrderSummaryText(),   // já existe no seu código
+        total: calculateFinalOrderTotal(),       // já existe no seu código
+        paymentMethod: orderData.paymentMethod,
+        orderType: orderData.deliveryType || 'balcao'
+    };
+
+    // Gravar pedido na aba "Pedidos"
+    sendOrderToSheet(orderDataForSheet);
+            function finalizeOrder() {
+    // ... (validações, montagem de mensagem, etc. que já existem)
+
+    // Montar dados para registro na planilha
+    const orderDataForSheet = {
+        customerName: orderData.customerName,
+        whatsapp: orderData.whatsapp,
+        itemsText: generateOrderSummaryText(),
+        total: calculateFinalOrderTotal(),
+        paymentMethod: orderData.paymentMethod,
+        orderType: orderData.deliveryType || 'balcao'
+    };
+
+    // Gravar pedido na aba "Pedidos"
+    sendOrderToSheet(orderDataForSheet);
+
+    // AQUI continua o que já tinha: envio para WhatsApp
+    // exemplo:
+    // const whatsappUrl = montarLinkWhatsApp(...);
+    // window.open(whatsappUrl, '_blank');
+}
+
+
             // Validate WhatsApp if webhook is active
             if (isWebhookActive()) {
                 const countryCodeSelect = document.getElementById('country-code');
